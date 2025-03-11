@@ -1,1 +1,5 @@
 streamlit
+transformers 
+pytorch-lightning 
+timm 
+donut-python
