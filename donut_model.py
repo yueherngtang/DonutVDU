@@ -43,7 +43,7 @@ class DonutInference:
     
 
 if  __name__ == "__main__":
-    image = Image.open("C:/Users/User/Downloads/testing.png")
+    image = Image.open("C:/Users/User/Documents/DONUTVDU/testing.png")
     image.show()
     donut = DonutInference()
     print(donut.run_inference(image))
