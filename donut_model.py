@@ -5,6 +5,10 @@ import numpy as np
 from io import BytesIO
 
 from donut import DonutModel
+import donut
+
+
+
 #from transformers import DonutProcessor
 
 class DonutInference:
