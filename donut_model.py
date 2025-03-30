@@ -18,6 +18,7 @@ class DonutInference:
         self.task_prompt = "<s_docvqa><s_question>{user_input}</s_question><s_answer>" if "docvqa" == task_name else f"<s_{task_name}>"
         self.pretrained_model = self._load_model(pretrained_path)
         #self.processor = DonutProcessor.from_pretrained(pretrained_path)
+        self.db_handler = MongoDBHandler()
 
     def _load_model(self, pretrained_path):
 
