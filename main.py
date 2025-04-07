@@ -1,4 +1,8 @@
-import streamlit as st 
+import streamlit as st
+from donut_model import DonutInference
+
+if "donut" not in st.session_state:
+    st.session_state.donut = DonutInference()
 
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
