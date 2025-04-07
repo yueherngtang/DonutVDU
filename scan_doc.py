@@ -1,7 +1,7 @@
 import streamlit as st
 import numpy as np
 from PIL import Image
-from main import donut
+# from main import donut
 
 # potentially explore st.data_editor
 
@@ -41,6 +41,7 @@ if img is not None:
 
     if st.button("Extract"):
         with st.spinner("Running inference..."):
+            donut = st.session_state.donut
             run_donut = donut.run_inference(img, image_name="testing.jpg")
             st.write("Extracted result:", run_donut)
         st.success("Inference complete!")
