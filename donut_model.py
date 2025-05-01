@@ -50,9 +50,7 @@ class DonutInference:
 
 if  __name__ == "__main__":
     print(torch.__version__)
-    image = Image.open("C:/Users/user/Documents/testing.jpg")
+    image = Image.open("C:/Users/User/Documents/DonutVDU/testing.png")
     # image.show()
     donut = DonutInference()
     print(donut.run_inference(image, image_name="testing.jpg"))
-
-# {'menu': [{'nm': '0571-1854 BLUS WANITA', 'unitprice': '@120,000', 'cnt': '1', 'price': '120,000'}, {'nm': '1002-0060 SHOPPING BAG', 'cnt': '1', 'price': '0'}], 'total': {'total_price': '120,000', 'changeprice': '0', 'creditcardprice': '120,000', 'menuqty_cnt': '1'}}
