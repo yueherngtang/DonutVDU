@@ -2,7 +2,6 @@ from pymongo import MongoClient
 import datetime
 import json
 import bcrypt
-import streamlit as st
 
 def test_mongo_connection(uri: str) -> bool:
     try:
