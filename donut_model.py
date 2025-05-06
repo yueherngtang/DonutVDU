@@ -50,7 +50,7 @@ class DonutInference:
 
 if  __name__ == "__main__":
     print(torch.__version__)
-    image = Image.open("C:/Users/User/Documents/DonutVDU/testing.png")
+    image = Image.open("C:/Users/User/Documents/DonutVDU/testing.jpg")
     # image.show()
     donut = DonutInference()
     print(donut.run_inference(image, image_name="testing.jpg"))
