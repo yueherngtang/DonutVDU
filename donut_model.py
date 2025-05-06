@@ -9,6 +9,7 @@ import donut
 
 import streamlit as st
 
+from mongoDB import MongoDBHandler
 #from transformers import DonutProcessor
 
 class DonutInference:
@@ -22,6 +23,7 @@ class DonutInference:
     def _load_model(self, pretrained_path):
 
         model = DonutModel.from_pretrained(pretrained_path)
+
         if torch.cuda.is_available():
             model.half()
             model.to(torch.device("cuda"))
@@ -54,3 +56,5 @@ if  __name__ == "__main__":
     # image.show()
     donut = DonutInference()
     print(donut.run_inference(image, image_name="testing.jpg"))
+
+#{'menu': [{'nm': '0571-1854 BLUS WANITA', 'unitprice': '@120,000', 'cnt': '1', 'price': '120,000'}, {'nm': '1002-0060 SHOPPING BAG', 'cnt': '1', 'price': '0'}], 'total': {'total_price': '120,000', 'changeprice': '0', 'creditcardprice': '120,000', 'menuqty_cnt': '1'}}
