@@ -1,3 +1,4 @@
+from typing import Union
 from pymongo import MongoClient
 import datetime
 import json
@@ -31,8 +32,21 @@ class MongoDBHandlerUser:
     def get_all_results(self):
         """Retrieve all stored inference results."""
         results = list(self.collection.find({}, {"_id": 0}))  # Exclude MongoDB ObjectId
-        return json.dumps(results, default=str, indent=4)
+        return flatten_rows(results)
     
+    def search_results(self, keys : list[str], values : list[str|int|float]):
+        assert len(keys) == len(values)
+        query = {}
+        for key, value in zip(keys, values):
+            query[f"output_data.{key}"] = str(value)
+        print(query)
+
+        doc = self.collection.find(query)
+        print(doc)
+        return flatten_rows(doc)
+        
+    
+
 
 class MongoDBHandlerLogin:
     def __init__(self, db_name="donut_login", collection_name="user"):
@@ -100,6 +114,31 @@ class MongoDBHandlerLogin:
         )
 
         return result.matched_count > 0
+
+def flatten_rows(results: Union[list, dict]):
+    flat_rows = []
+    for entry in results:
+        if isinstance(entry["output_data"], list):
+            entry = entry["output_data"][0]
+        else:
+            entry = entry["output_data"]
+        base = {
+            "merchant": None,
+            "date": None,
+            "recipient": None,
+            "subtotal_price" : None,
+            "total_price": None,
+            }
+        for key in base.keys():
+            if key in entry:
+                base[key] = str(entry[key])
+
+        if "menu" in entry:
+            for i, item in enumerate(entry["menu"]):
+                for key, val in item.items():
+                    base[f"menu_{i+1}_{key}"] = str(val)
+        flat_rows.append(base)
+    return flat_rows
 
 if __name__ == "__main__":
     db_handler = MongoDBHandlerLogin()
