@@ -228,6 +228,12 @@ with tab1:
 
 with tab2:
     st.header("Search")
+    if st.session_state.db_user is not None:
+        results = st.session_state.db_user.get_all_results()
+        df = pd.DataFrame(results)
+        st.dataframe(df, use_container_width= True)
+
+        
 
 with tab3:
     st.header("Profile")
