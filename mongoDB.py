@@ -33,6 +33,17 @@ class MongoDBHandlerUser:
         """Retrieve all stored inference results."""
         results = list(self.collection.find({}, {"_id": 0}))  # Exclude MongoDB ObjectId
         return flatten_rows(results)
+    
+    def search_results(self, keys : list[str], values : list[str|int|float]):
+        assert len(keys) == len(values)
+        query = {}
+        for key, value in zip(keys, values):
+            query[f"output_data.{key}"] = str(value)
+        print(query)
+
+        doc = self.collection.find(query)
+        print(doc)
+        return flatten_rows(doc)
         
     
 
@@ -115,6 +126,7 @@ def flatten_rows(results: Union[list, dict]):
             "merchant": None,
             "date": None,
             "recipient": None,
+            "subtotal_price" : None,
             "total_price": None,
             }
         for key in base.keys():

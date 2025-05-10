@@ -229,7 +229,39 @@ with tab1:
 with tab2:
     st.header("Search")
     if st.session_state.db_user is not None:
-        results = st.session_state.db_user.get_all_results()
+        if "trigger_search" not in st.session_state:
+            st.session_state.trigger_search = False
+
+        with st.expander("Advanced Filters"):
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                merchant_filter = st.text_input("Merchant contains")
+                recipient_filter = st.text_input("Recipient contains")
+
+            with col2:
+                min_date = st.date_input("From date")
+                max_date = st.date_input("To date")
+
+            with col3:
+                min_price = st.number_input("Min total price")
+                max_price = st.number_input("Max total price")
+            
+            if st.button("🔎 Search"):
+                st.session_state.trigger_search = True
+
+        
+        if st.session_state.trigger_search:
+            keys = []
+            values = []
+            if merchant_filter:
+                keys.append("merchant")
+                values.append(merchant_filter)
+            if recipient_filter:
+                keys.append("recipient")
+                values.append(recipient_filter)
+            results = st.session_state.db_user.search_results(keys = keys, values = values)
+        else:
+            results = st.session_state.db_user.get_all_results()
         df = pd.DataFrame(results)
         st.dataframe(df, use_container_width= True)
 
