@@ -46,8 +46,6 @@ class MongoDBHandlerUser:
         return flatten_rows(doc)
         
     
-
-
 class MongoDBHandlerLogin:
     def __init__(self, db_name="donut_login", collection_name="user"):
         self.client = MongoClient("mongodb+srv://donut_login:donut_mds13@donutlogin.jtd83h6.mongodb.net/?retryWrites=true&w=majority&appName=donutlogin") 

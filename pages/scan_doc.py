@@ -226,6 +226,7 @@ with tab1:
                     #     st.error("Result failed to save. Please check your database configurations in 'Profile' tab")
 
 
+
 with tab2:
     st.header("Search")
     if st.session_state.db_user is not None:
