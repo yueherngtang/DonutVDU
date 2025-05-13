@@ -76,7 +76,7 @@ if st.session_state.login:
                     )
                 except Exception as e:
                     st.session_state.db_user = None
-                time.sleep(2)
+                # time.sleep(2)
                 st.session_state.log_in_user = username
                 st.session_state.login = False
                 st.switch_page("pages/scan_doc.py")
