@@ -5,7 +5,7 @@ from main import mongo_login, hash_password
 import time
 from mongoDB import test_mongo_connection, MongoDBHandlerUser
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, date
 # from main import donut
 from io import BytesIO
 import base64
@@ -62,6 +62,110 @@ with tab1:
 
         else:
             return obj if not is_empty(obj) else None
+    
+    def clean_donut_output(x):
+        if isinstance(x, list):
+            ret = {}
+            ret["uncategorized"] = []
+            for obj in x:
+                ret["uncategorized"].append(obj)
+            return ret
+        return x
+
+    def clean_final_preview(output):
+        allow_saving = True
+        if not isinstance(output, dict):
+            st.toast("Preview is not a Dict!")
+            allow_saving = False
+
+        if "date" in output.keys() and not isinstance(output["date"], datetime):
+            try:
+                output["date"] = datetime.combine(output["date"], datetime.min.time())
+            except ValueError:
+                st.toast("Date Format is Incorrect, Please Check the Date Field.")
+                allow_saving = False
+        
+        if "subtotal" in output.keys():
+            if "subtotal_price" in output["subtotal"].keys():
+                try:
+                    output["subtotal"]["subtotal_price"] = float(output["subtotal"]["subtotal_price"].replace(",",""))
+                except (ValueError, TypeError):
+                    st.toast("subtotal_price Format is Incorrect, Please make sure there are no spaces or currencies.")
+                    allow_saving = False
+            else:
+                output["subtotal"]["subtotal_price"] =  0
+
+        if "total" in output.keys():
+            if "total_price" in output["total"]:
+                try:
+                    output["total"]["total_price"] = float(output["total"]["total_price"].replace(",",""))
+                except (ValueError, TypeError):
+                    st.toast("total_price Format is Incorrect, Please make sure there are no spaces or currencies.")
+                    allow_saving = False
+            else:
+                output["total"]["total_price"] = 0
+
+            if  "cashprice" in output["total"]:
+                try:
+                    output["total"]["cashprice"] = float(output["total"]["cashprice"].replace(",",""))
+                except (ValueError, TypeError):
+                    st.toast("cashprice Format is Incorrect, Please make sure there are no spaces or currencies.")
+                    allow_saving = False
+            
+            if  "changeprice" in output["total"]:
+                try:
+                    output["total"]["changeprice"] = float(output["total"]["changeprice"].replace(",",""))
+                except (ValueError, TypeError):
+                    st.toast("changeprice Format is Incorrect, Please make sure there are no spaces or currencies.")
+                    allow_saving = False
+                
+            if  "menuqty_cnt" in output["total"]:
+                try:
+                    output["total"]["menuqty_cnt"] = float(output["total"]["menuqty_cnt"].replace(",",""))
+                except (ValueError, TypeError):
+                    st.toast("menuqty_cnt Format is Incorrect, Please make sure there are no spaces or currencies.")
+                    allow_saving = False
+        
+        if "menu" in output.keys():
+            for menu in output["menu"]:
+                if "cnt" in menu:
+                    try:
+                        menu["cnt"] = float(menu["cnt"].replace(",", ""))
+                    except (ValueError, TypeError):
+                        st.toast("Menu cnt not in numerical format")
+                        allow_saving = False
+                if "unitprice" in menu:
+                    try:
+                        menu["unitprice"] = float(menu["unitprice"].replace(",", ""))
+                    except (ValueError, TypeError):
+                        st.toast("Menu unitprice not in numerical format")
+                        allow_saving = False
+                
+                if "discountprice" in menu:
+                    try:
+                        menu["discountprice"] = float(menu["discountprice"].replace(",", ""))
+                    except (ValueError, TypeError):
+                        st.toast("Menu discountprice not in numerical format")
+                        allow_saving = False
+                if "price" in menu:
+                    try:
+                        menu["price"] = float(menu["price"].replace(",", ""))
+                    except (ValueError, TypeError):
+                        st.toast("Menu price not in numerical format")
+                        allow_saving = False
+                
+                if "itemsubtotal" in menu:
+                    try:
+                        menu["itemsubtotal"] = float(menu["itemsubtotal"].replace(",", ""))
+                    except (ValueError, TypeError):
+                        st.toast("Menu itemsubtotal not in numerical format")
+                        allow_saving = False
+
+        return output, allow_saving
+ 
+
+                
+
 
     def is_empty(value):
         # Catch None, empty string, empty list/dict, NaN
@@ -123,20 +227,20 @@ with tab1:
                 st.session_state.pop("edit_clicked", None)
                 donut = st.session_state.donut
                 run_donut = donut.run_inference(img, image_name= filename)
-                st.session_state.run_donut_result = run_donut
+                st.session_state.run_donut_result = clean_donut_output(run_donut)
         
         if st.session_state.run_donut_result:
             st.write("Extracted result:", st.session_state.run_donut_result)
-            save_button = st.button("Save result")
+            # save_button = st.button("Save result")
             edit_button = st.button("Edit result")
             if "edit_clicked" not in st.session_state:
                 st.session_state.edit_clicked = False
-            if save_button:
-                if st.session_state.db_user is not None:
-                    st.session_state.db_user.save_inference_result(filename, "cord-v2", st.session_state.run_donut_result) 
-                    st.success("Result saved to database!")
-                else:
-                    st.error("Result failed to save. Please check your database configurations in 'Profile' tab")
+            # if save_button:
+            #     if st.session_state.db_user is not None:
+            #         st.session_state.db_user.save_inference_result(filename, "cord-v2", st.session_state.run_donut_result) 
+            #         st.success("Result saved to database!")
+            #     else:
+            #         st.error("Result failed to save. Please check your database configurations in 'Profile' tab")
             if edit_button:
                 st.session_state.preview = None
                 st.session_state.edit_clicked = True
@@ -153,44 +257,58 @@ with tab1:
         if st.session_state.run_donut_result and st.session_state.edit_clicked is True:
             st.subheader("Basic Info")
             edited_output = {}
+            raw_date = st.session_state.run_donut_result.get("date","")
 
             edited_output["merchant"] = st.text_input("Merchant", value=st.session_state.run_donut_result.get("merchant", ""))
-            edited_output["date"] = st.text_input("Date", value=st.session_state.run_donut_result.get("date", ""))
+            try:
+                parsed_date = datetime.datetime.strptime(raw_date, "%d-%m-%Y").date()
+            except Exception:
+                parsed_date = date.today()
+            edited_output["date"] = st.date_input("Date", value=parsed_date)
             edited_output["recipient"] = st.text_input("Recipient", value=st.session_state.run_donut_result.get("recipient", ""))
 
             # --- MENU ---
             st.subheader("Menu")
-            new_menu_col = st.text_input("Add new column to Menu", key="new_menu_col")
+            predefined_menu_columns = ["nm", "cnt", "num", "unitprice", "discountprice", "itemsubtotal", "etc"]
+            new_menu_col = st.selectbox("Add new column to Menu", options = predefined_menu_columns, key="new_menu_col")
             if st.button("Add Column to Menu") and new_menu_col:
-                if new_menu_col not in st.session_state.edited_menu_df.columns:
+                if new_menu_col in st.session_state.edited_menu_df.columns:
+                    st.toast("This column already exists!")
+                elif new_menu_col not in st.session_state.edited_menu_df.columns:
                     st.session_state.edited_menu_df[new_menu_col] = ""
 
             st.session_state.edited_menu_df = st.data_editor(
-                st.session_state.edited_menu_df, num_rows="dynamic", use_container_width=True
+                st.session_state.edited_menu_df, num_rows="dynamic", use_container_width=True, key = "key1"
             )
             edited_output["menu"] = st.session_state.edited_menu_df.to_dict(orient="records")
 
             # --- TOTAL ---
             st.subheader("Total")
-            new_total_col = st.text_input("Add new column to Total", key="new_total_col")
+            predefined_total_columns = ["total_price", "total_etc", "cashprice", "changeprice", "menuqty_cnt"]
+            new_total_col = st.selectbox("Add new column to Total", options = predefined_total_columns, key="new_total_col")
             if st.button("Add Column to Total") and new_total_col:
-                if new_total_col not in st.session_state.edited_total_df.columns:
+                if new_total_col in st.session_state.edited_total_df.columns:
+                    st.toast("This column already exists!")
+                elif new_total_col not in st.session_state.edited_total_df.columns:
                     st.session_state.edited_total_df[new_total_col] = ""
 
             st.session_state.edited_total_df = st.data_editor(
-                st.session_state.edited_total_df, num_rows=1, use_container_width=True
+                st.session_state.edited_total_df, num_rows=1, use_container_width=True, key = "key2"
             )
             edited_output["total"] = st.session_state.edited_total_df.iloc[0].to_dict()
 
             # --- SUBTOTAL ---
             st.subheader("Subtotal")
-            new_subtotal_col = st.text_input("Add new column to Subtotal", key="new_subtotal_col")
+            predefined_subtotal_columns = ["subtotal_price", "discount_price", "service_price", "othersvc_price", "tax_price", "subtotal_etc"]
+            new_subtotal_col = st.selectbox("Add new column to Subtotal", options = predefined_subtotal_columns, key="new_subtotal_col")
             if st.button("Add Column to Subtotal") and new_subtotal_col:
-                if new_subtotal_col not in st.session_state.edited_subtotal_df.columns:
+                if new_subtotal_col in st.session_state.edited_subtotal_df.columns:
+                    st.toast("This column already exists!")
+                elif new_subtotal_col not in st.session_state.edited_subtotal_df.columns:
                     st.session_state.edited_subtotal_df[new_subtotal_col] = ""
 
             st.session_state.edited_subtotal_df = st.data_editor(
-                st.session_state.edited_subtotal_df, num_rows=1, use_container_width=True
+                st.session_state.edited_subtotal_df, num_rows=1, use_container_width=True, key = "key3"
             )
             edited_output["subtotal"] = st.session_state.edited_subtotal_df.iloc[0].to_dict()
 
@@ -200,23 +318,25 @@ with tab1:
                 st.session_state.pop("preview", None)
                 # st.write(edited_output)
                 cleaned = clean_data(edited_output)
-                st.write(cleaned)
+                # st.write(cleaned)
+                st.session_state.allow_save = False
                 if "preview" not in st.session_state:
-                    st.session_state.preview =cleaned
+                    st.session_state.preview, st.session_state.allow_save  = clean_final_preview(cleaned)
+                    st.write(st.session_state.preview)
 
-            if st.session_state.preview:
+            if st.session_state.preview and st.session_state.allow_save:
                 save_edited_button = st.button("Save edited result")
                 if save_edited_button:
                     if st.session_state.db_user is not None:
                         st.session_state.db_user.save_inference_result(filename, "cord-v2", st.session_state.preview) 
                         st.success("Result saved to database!")
                         st.session_state.preview = None
-                        time.sleep(2)
+                        # time.sleep(2)
                         st.rerun()
                     else:
                         st.error("Result failed to save. Please check your database configurations in 'Profile' tab")
                         st.session_state.preview = None
-                        time.sleep(2)
+                        # time.sleep(2)
                         st.rerun()
 
                     # if st.session_state.db_user is not None:

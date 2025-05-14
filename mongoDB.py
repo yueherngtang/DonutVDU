@@ -127,6 +127,7 @@ class MongoDBHandlerLogin:
 
 def flatten_rows(results: Union[list, dict]):
     flat_rows = []
+    print(results)
     for entry in results:
         if isinstance(entry["output_data"], list):
             entry = entry["output_data"][0]
@@ -136,17 +137,21 @@ def flatten_rows(results: Union[list, dict]):
             "merchant": None,
             "date": None,
             "recipient": None,
-            "subtotal_price" : None,
-            "total_price": None,
             }
         for key in base.keys():
             if key in entry:
                 base[key] = str(entry[key])
-
+        if "subtotal" in entry:
+            for key, val in entry["subtotal"].items():
+                base[key] = val
+        if "total" in entry:
+            for key, val in entry["total"].items():
+                base[key] = val
         if "menu" in entry:
             for i, item in enumerate(entry["menu"]):
                 for key, val in item.items():
                     base[f"menu_{i+1}_{key}"] = str(val)
+        
         flat_rows.append(base)
     return flat_rows
 
