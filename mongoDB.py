@@ -34,15 +34,27 @@ class MongoDBHandlerUser:
         results = list(self.collection.find({}, {"_id": 0}))  # Exclude MongoDB ObjectId
         return flatten_rows(results)
     
-    def search_results(self, keys : list[str], values : list[str|int|float]):
+    def search_results(self, keys: list[str], values: list[str | int | float], min_price: float = None, max_price: float = None):
         assert len(keys) == len(values)
         query = {}
+
+        # Regular field matching
         for key, value in zip(keys, values):
             query[f"output_data.{key}"] = str(value)
-        print(query)
+
+        # Add price range filtering
+        price_query = {}
+        if min_price is not None:
+            price_query["$gte"] = min_price
+        if max_price is not None:
+            price_query["$lte"] = max_price
+        if price_query:
+            query["output_data.total_price"] = price_query
+
+        print("Query:", query)
 
         doc = self.collection.find(query)
-        print(doc)
+        print("Cursor:", doc)
         return flatten_rows(doc)
         
     

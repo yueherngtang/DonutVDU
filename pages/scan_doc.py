@@ -260,7 +260,16 @@ with tab2:
             if recipient_filter:
                 keys.append("recipient")
                 values.append(recipient_filter)
-            results = st.session_state.db_user.search_results(keys = keys, values = values)
+
+            min_price_val = min_price if min_price else None
+            max_price_val = max_price if max_price else None
+
+            results = st.session_state.db_user.search_results(
+                keys=keys,
+                values=values,
+                min_price=min_price_val,
+                max_price=max_price_val
+            )
         else:
             results = st.session_state.db_user.get_all_results()
         df = pd.DataFrame(results)
