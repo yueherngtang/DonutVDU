@@ -141,15 +141,15 @@ def flatten_rows(results: Union[list, dict]):
             "recipient": None,
             }
         for key in base.keys():
-            if key in entry:
+            if key in entry and entry[key]:
                 base[key] = str(entry[key])
-        if "subtotal" in entry:
+        if "subtotal" in entry.keys() and entry["subtotal"]:
             for key, val in entry["subtotal"].items():
                 base[key] = val
-        if "total" in entry:
+        if "total" in entry.keys() and entry["total"]:
             for key, val in entry["total"].items():
                 base[key] = val
-        if "menu" in entry:
+        if "menu" in entry.keys() and entry["menu"]:
             for i, item in enumerate(entry["menu"]):
                 for key, val in item.items():
                     base[f"menu_{i+1}_{key}"] = str(val)
