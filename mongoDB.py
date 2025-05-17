@@ -152,14 +152,6 @@ def flatten_rows(results: Union[list, dict]):
             "date": None,
             "recipient": None,
             }
-        for key in base.keys():
-            if key in entry and entry[key]:
-                base[key] = str(entry[key])
-        if "subtotal" in entry.keys() and entry["subtotal"]:
-            "merchant": str(entry.get("merchant", "")),
-            "date": str(entry.get("date", "")),
-            "recipient": str(entry.get("recipient", "")),
-        }
 
         def safe_float(val):
             try:
