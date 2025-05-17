@@ -346,6 +346,7 @@ with tab1:
                     #     st.error("Result failed to save. Please check your database configurations in 'Profile' tab")
 
 
+
 with tab2:
     st.header("Search")
     if st.session_state.db_user is not None:
@@ -379,7 +380,21 @@ with tab2:
             if recipient_filter:
                 keys.append("recipient")
                 values.append(recipient_filter)
-            results = st.session_state.db_user.search_results(keys = keys, values = values)
+
+            min_price_val = min_price if min_price else None
+            max_price_val = max_price if max_price else None
+
+            start_date_val = (datetime.combine(min_date, datetime.min.time()) if min_date else None)
+            end_date_val = (datetime.combine(max_date, datetime.max.time()) if max_date else None)
+
+            results = st.session_state.db_user.search_results(
+                keys=keys,
+                values=values,
+                min_price=min_price_val,
+                max_price=max_price_val,
+                start_date=start_date_val,
+                end_date=end_date_val
+            )
         else:
             results = st.session_state.db_user.get_all_results()
         df = pd.DataFrame(results)
