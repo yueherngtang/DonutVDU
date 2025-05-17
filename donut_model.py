@@ -9,10 +9,25 @@ import donut
 
 import streamlit as st
 
-#from transformers import DonutProcessor
+import torch.nn as nn
 
+# Patch to prevent crash if _init_weights is called
+def _init_weights(self, module):
+    for name, param in module.named_parameters(recurse=True):
+        if param.requires_grad:
+            if param.dim() > 1:
+                nn.init.xavier_uniform_(param)
+            else:
+                nn.init.zeros_(param)
+
+DonutModel._init_weights = _init_weights  # Patch once before loading
+
+#from transformers import DonutProcessor
+# C:/Users/User/Desktop/FIT3164/Project/DonutVDU/Test_Model
+# C:/Users/User/Desktop/FIT3164/Project/DonutVDU/Test_Model/Training_4
+# tyhtyhtyh/donut_test
 class DonutInference:
-    def __init__(self, task_name="cord-v2", pretrained_path="naver-clova-ix/donut-base-finetuned-cord-v2"):
+    def __init__(self, task_name="cord-v2", pretrained_path="tyhtyhtyh/Training_4"):
 
         self.task_name = task_name
         self.task_prompt = "<s_docvqa><s_question>{user_input}</s_question><s_answer>" if "docvqa" == task_name else f"<s_{task_name}>"
@@ -50,7 +65,7 @@ class DonutInference:
 
 if  __name__ == "__main__":
     print(torch.__version__)
-    image = Image.open("C:/Users/User/Documents/DonutVDU/testing.png")
+    image = Image.open("C:/Users/User/Downloads/dataset_for_donut/dataset_for_donut/train/0023.jpg")
     # image.show()
     donut = DonutInference()
     print(donut.run_inference(image, image_name="testing.jpg"))
