@@ -7,3 +7,5 @@ pytorch-lightning==1.6.4
 timm==0.5.4
 gradio
 datasets==3.6.0
+pymongo==4.11.3
+bcrypt==4.3.0
