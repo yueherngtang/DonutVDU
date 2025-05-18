@@ -161,14 +161,10 @@ def flatten_rows(results: Union[list, dict]):
 
         if "subtotal" in entry and isinstance(entry["subtotal"], dict):
             for key, val in entry["subtotal"].items():
-                base[key] = val
-        if "total" in entry.keys() and entry["total"]:
                 base[key] = safe_float(val)
 
         if "total" in entry and isinstance(entry["total"], dict):
             for key, val in entry["total"].items():
-                base[key] = val
-        if "menu" in entry.keys() and entry["menu"]:
                 base[key] = safe_float(val)
 
         if "menu" in entry and isinstance(entry["menu"], list):
