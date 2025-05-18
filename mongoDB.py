@@ -34,32 +34,39 @@ class MongoDBHandlerUser:
         results = list(self.collection.find({}, {"_id": 0}))  # Exclude MongoDB ObjectId
         return flatten_rows(results)
     
-    def search_results(self, keys : list[str], values : list[str|int|float]):
+    def search_results(self, keys: list[str], values: list[str | int | float], 
+        min_price: float = None, max_price: float = None, start_date: datetime = None,
+        end_date: datetime = None):
+
         assert len(keys) == len(values)
         query = {}
+
         for key, value in zip(keys, values):
-            if key == "merchant" or key == "recipient":
-                query[f"output_data.{key}"] = {"$regex": str(value), "$options": "i"}
-            elif key == "min_date":
-                query.setdefault("output_data.date", {})["$gte"] = value
+            query[f"output_data.{key}"] = {"$regex": str(value), "$options": "i"}
 
-            elif key == "max_date":
-                query.setdefault("output_data.date", {})["$lte"] = value
+        price_query = {}
+        if min_price is not None:
+            price_query["$gte"] = min_price
+        if max_price is not None:
+            price_query["$lte"] = max_price
+        if price_query:
+            query["output_data.total.total_price"] = price_query
 
-            elif key == "min_price":
-                query.setdefault("output_data.total.total_price", {})["$gte"] = value
+        if start_date or end_date:
+            date_query = {}
+            if start_date:
+                date_query["$gte"] = start_date
+            if end_date:
+                date_query["$lte"] = end_date
+            query["output_data.date"] = date_query
 
-            elif key == "max_price":
-                query.setdefault("output_data.total.total_price", {})["$lte"] = value
-        print(query)
+        print("Query:", query)
 
         doc = self.collection.find(query)
-        print(doc)
+        print("Cursor:", doc)
         return flatten_rows(doc)
         
     
-
-
 class MongoDBHandlerLogin:
     def __init__(self, db_name="donut_login", collection_name="user"):
         self.client = MongoClient("mongodb+srv://donut_login:donut_mds13@donutlogin.jtd83h6.mongodb.net/?retryWrites=true&w=majority&appName=donutlogin") 
@@ -127,34 +134,52 @@ class MongoDBHandlerLogin:
 
         return result.matched_count > 0
 
+
+from typing import Union
+
 def flatten_rows(results: Union[list, dict]):
     flat_rows = []
-    print(results)
+    # print("Results:", results)
+
     for entry in results:
         if isinstance(entry["output_data"], list):
             entry = entry["output_data"][0]
         else:
             entry = entry["output_data"]
+
         base = {
             "merchant": None,
             "date": None,
             "recipient": None,
             }
+
+        # def safe_float(val):
+        #     try:
+        #         return float(val)
+        #     except (ValueError, TypeError):
+        #         return None
         for key in base.keys():
             if key in entry:
                 base[key] = str(entry[key])
-        if "subtotal" in entry:
+        if "subtotal" in entry and isinstance(entry["subtotal"], dict):
             for key, val in entry["subtotal"].items():
-                base[key] = val
-        if "total" in entry:
+                base[key] = str(val)
+        # if "total" in entry.keys() and entry["total"]:
+        #         base[key] = safe_float(val)
+
+        if "total" in entry and isinstance(entry["total"], dict):
             for key, val in entry["total"].items():
-                base[key] = val
-        if "menu" in entry:
+                base[key] = str(val)
+        # if "menu" in entry.keys() and entry["menu"]:
+        #         base[key] = safe_float(val)
+
+        if "menu" in entry and isinstance(entry["menu"], list):
             for i, item in enumerate(entry["menu"]):
                 for key, val in item.items():
                     base[f"menu_{i+1}_{key}"] = str(val)
-        
+
         flat_rows.append(base)
+
     return flat_rows
 
 if __name__ == "__main__":

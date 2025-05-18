@@ -101,11 +101,14 @@ if st.session_state.login:
         signup_button = st.button("Sign Up Now")
 
         if signup_button:
-            if mongo_login.add_user(new_user, hash_password(new_password), new_db_name, new_collection_name, new_mongo_client):
-                st.success("You have successfully created an account!")
+            if new_user and  new_password:
+                if mongo_login.add_user(new_user, hash_password(new_password), new_db_name, new_collection_name, new_mongo_client):
+                    st.success("You have successfully created an account!")
 
+                else:
+                    st.error("Username already exists")
             else:
-                st.error("Username already exists")
+                st.error("Username and Password are required!")
 
         # Navigate back to login page
         st.button("Back to Login", on_click=navigate_to_login)
