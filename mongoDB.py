@@ -42,7 +42,7 @@ class MongoDBHandlerUser:
         query = {}
 
         for key, value in zip(keys, values):
-            query[f"output_data.{key}"] = str(value)
+            query[f"output_data.{key}"] = {"$regex": str(value), "$options": "i"}
 
         price_query = {}
         if min_price is not None:
@@ -139,7 +139,7 @@ from typing import Union
 
 def flatten_rows(results: Union[list, dict]):
     flat_rows = []
-    print("Results:", results)
+    # print("Results:", results)
 
     for entry in results:
         if isinstance(entry["output_data"], list):
@@ -153,12 +153,14 @@ def flatten_rows(results: Union[list, dict]):
             "recipient": None,
             }
 
-        def safe_float(val):
-            try:
-                return float(val)
-            except (ValueError, TypeError):
-                return None
-
+        # def safe_float(val):
+        #     try:
+        #         return float(val)
+        #     except (ValueError, TypeError):
+        #         return None
+        for key in base.keys():
+            if key in entry:
+                base[key] = str(entry[key])
         if "subtotal" in entry and isinstance(entry["subtotal"], dict):
             for key, val in entry["subtotal"].items():
                 base[key] = safe_float(val)
