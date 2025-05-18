@@ -77,18 +77,19 @@ with tab1:
         if not isinstance(output, dict):
             st.toast("Preview is not a Dict!")
             allow_saving = False
+            return output, allow_saving
 
         if "date" in output.keys() and not isinstance(output["date"], datetime):
             try:
                 output["date"] = datetime.combine(output["date"], datetime.min.time())
-            except ValueError:
+            except (ValueError, TypeError):
                 st.toast("Date Format is Incorrect, Please Check the Date Field.")
                 allow_saving = False
         
         if "subtotal" in output.keys():
             if "subtotal_price" in output["subtotal"].keys():
                 try:
-                    output["subtotal"]["subtotal_price"] = float(output["subtotal"]["subtotal_price"].replace(",",""))
+                    output["subtotal"]["subtotal_price"] = float(output["subtotal"]["subtotal_price"].replace(",","").replace("RM","").strip())
                 except (ValueError, TypeError):
                     st.toast("subtotal_price Format is Incorrect, Please make sure there are no spaces or currencies.")
                     allow_saving = False
@@ -98,7 +99,7 @@ with tab1:
         if "total" in output.keys():
             if "total_price" in output["total"]:
                 try:
-                    output["total"]["total_price"] = float(output["total"]["total_price"].replace(",",""))
+                    output["total"]["total_price"] = float(output["total"]["total_price"].replace(",","").replace("RM","").strip())
                 except (ValueError, TypeError):
                     st.toast("total_price Format is Incorrect, Please make sure there are no spaces or currencies.")
                     allow_saving = False
@@ -107,21 +108,21 @@ with tab1:
 
             if  "cashprice" in output["total"]:
                 try:
-                    output["total"]["cashprice"] = float(output["total"]["cashprice"].replace(",",""))
+                    output["total"]["cashprice"] = float(output["total"]["cashprice"].replace(",","").replace("RM","").strip())
                 except (ValueError, TypeError):
                     st.toast("cashprice Format is Incorrect, Please make sure there are no spaces or currencies.")
                     allow_saving = False
             
             if  "changeprice" in output["total"]:
                 try:
-                    output["total"]["changeprice"] = float(output["total"]["changeprice"].replace(",",""))
+                    output["total"]["changeprice"] = float(output["total"]["changeprice"].replace(",","").replace("RM","").strip())
                 except (ValueError, TypeError):
                     st.toast("changeprice Format is Incorrect, Please make sure there are no spaces or currencies.")
                     allow_saving = False
                 
             if  "menuqty_cnt" in output["total"]:
                 try:
-                    output["total"]["menuqty_cnt"] = float(output["total"]["menuqty_cnt"].replace(",",""))
+                    output["total"]["menuqty_cnt"] = float(output["total"]["menuqty_cnt"].replace(",","").replace("RM","").strip())
                 except (ValueError, TypeError):
                     st.toast("menuqty_cnt Format is Incorrect, Please make sure there are no spaces or currencies.")
                     allow_saving = False
@@ -130,33 +131,33 @@ with tab1:
             for menu in output["menu"]:
                 if "cnt" in menu:
                     try:
-                        menu["cnt"] = float(menu["cnt"].replace(",", ""))
+                        menu["cnt"] = float(menu["cnt"].replace(",", "").replace("RM","").strip())
                     except (ValueError, TypeError):
                         st.toast("Menu cnt not in numerical format")
                         allow_saving = False
                 if "unitprice" in menu:
                     try:
-                        menu["unitprice"] = float(menu["unitprice"].replace(",", ""))
+                        menu["unitprice"] = float(menu["unitprice"].replace(",", "").replace("RM","").strip())
                     except (ValueError, TypeError):
                         st.toast("Menu unitprice not in numerical format")
                         allow_saving = False
                 
                 if "discountprice" in menu:
                     try:
-                        menu["discountprice"] = float(menu["discountprice"].replace(",", ""))
+                        menu["discountprice"] = float(menu["discountprice"].replace(",", "").replace("RM","").strip())
                     except (ValueError, TypeError):
                         st.toast("Menu discountprice not in numerical format")
                         allow_saving = False
                 if "price" in menu:
                     try:
-                        menu["price"] = float(menu["price"].replace(",", ""))
+                        menu["price"] = float(menu["price"].replace(",", "").replace("RM","").strip())
                     except (ValueError, TypeError):
                         st.toast("Menu price not in numerical format")
                         allow_saving = False
                 
                 if "itemsubtotal" in menu:
                     try:
-                        menu["itemsubtotal"] = float(menu["itemsubtotal"].replace(",", ""))
+                        menu["itemsubtotal"] = float(menu["itemsubtotal"].replace(",", "").replace("RM","").strip())
                     except (ValueError, TypeError):
                         st.toast("Menu itemsubtotal not in numerical format")
                         allow_saving = False
@@ -246,13 +247,26 @@ with tab1:
                 st.session_state.edit_clicked = True
 
             if "edited_menu_df" not in st.session_state:
-                st.session_state.edited_menu_df = pd.DataFrame(st.session_state.run_donut_result.get("menu", []))
+                menu_data = st.session_state.run_donut_result.get("menu", [])
+                if isinstance(menu_data, dict):
+                    menu_data = [menu_data]
+                elif not isinstance(menu_data, list):
+                    menu_data = []
+
+                st.session_state.edited_menu_df = pd.DataFrame(menu_data)
 
             if "edited_total_df" not in st.session_state:
-                st.session_state.edited_total_df = pd.DataFrame([st.session_state.run_donut_result.get("total", {})])
+                total_data = st.session_state.run_donut_result.get("total", {})
+                if not isinstance(total_data, dict):
+                    total_data = {}
+                
+                st.session_state.edited_total_df = pd.DataFrame([total_data])
 
             if "edited_subtotal_df" not in st.session_state:
-                st.session_state.edited_subtotal_df = pd.DataFrame([st.session_state.run_donut_result.get("subtotal", {})])
+                subtotal_data = st.session_state.run_donut_result.get("subtotal", {})
+                if not isinstance(subtotal_data, dict):
+                    subtotal_data = {}
+                st.session_state.edited_subtotal_df = pd.DataFrame([subtotal_data])
 
         if st.session_state.run_donut_result and st.session_state.edit_clicked is True:
             st.subheader("Basic Info")
@@ -352,6 +366,8 @@ with tab2:
     if st.session_state.db_user is not None:
         if "trigger_search" not in st.session_state:
             st.session_state.trigger_search = False
+        if "clear_filters" not in st.session_state:
+            st.session_state.clear_filters = False
 
         with st.expander("Advanced Filters"):
             col1, col2, col3 = st.columns(3)
@@ -360,15 +376,19 @@ with tab2:
                 recipient_filter = st.text_input("Recipient contains")
 
             with col2:
-                min_date = st.date_input("From date")
-                max_date = st.date_input("To date")
+                min_date = st.date_input("From date", value = datetime(2000,1,1))
+                max_date = st.date_input("To date", value = datetime.now())
 
             with col3:
-                min_price = st.number_input("Min total price")
-                max_price = st.number_input("Max total price")
+                min_price = st.number_input("Min total price", value = 0.00)
+                max_price = st.number_input("Max total price", value = 9999999.99)
             
             if st.button("🔎 Search"):
                 st.session_state.trigger_search = True
+                st.session_state.clear_filters = False
+            if st.button("Clear Filters"):
+                st.session_state.clear_filters = True
+                st.session_state.trigger_search = False
 
         
         if st.session_state.trigger_search:
@@ -395,7 +415,11 @@ with tab2:
                 start_date=start_date_val,
                 end_date=end_date_val
             )
-        else:
+
+        if st.session_state.clear_filters:
+            results = st.session_state.db_user.get_all_results()
+            
+        if not (st.session_state.clear_filters or st.session_state.trigger_search):
             results = st.session_state.db_user.get_all_results()
         df = pd.DataFrame(results)
         st.dataframe(df, use_container_width= True)
