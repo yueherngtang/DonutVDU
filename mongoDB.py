@@ -153,11 +153,12 @@ def flatten_rows(results: Union[list, dict]):
             "recipient": None,
             }
 
-        # def safe_float(val):
-        #     try:
-        #         return float(val)
-        #     except (ValueError, TypeError):
-        #         return None
+        def safe_float(val):
+            try:
+                return float(val)
+            except (ValueError, TypeError):
+                return None
+            
         for key in base.keys():
             if key in entry:
                 base[key] = str(entry[key])
