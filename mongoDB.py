@@ -139,7 +139,6 @@ from typing import Union
 
 def flatten_rows(results: Union[list, dict]):
     flat_rows = []
-    # print("Results:", results)
 
     for entry in results:
         if isinstance(entry["output_data"], list):
@@ -152,23 +151,17 @@ def flatten_rows(results: Union[list, dict]):
             "date": None,
             "recipient": None,
             }
-
-        def safe_float(val):
-            try:
-                return float(val)
-            except (ValueError, TypeError):
-                return None
             
         for key in base.keys():
             if key in entry:
                 base[key] = str(entry[key])
         if "subtotal" in entry and isinstance(entry["subtotal"], dict):
             for key, val in entry["subtotal"].items():
-                base[key] = safe_float(val)
+                base[key] = str(val)
 
         if "total" in entry and isinstance(entry["total"], dict):
             for key, val in entry["total"].items():
-                base[key] = safe_float(val)
+                base[key] = str(val)
 
         if "menu" in entry and isinstance(entry["menu"], list):
             for i, item in enumerate(entry["menu"]):
