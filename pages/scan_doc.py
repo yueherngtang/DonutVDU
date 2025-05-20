@@ -246,7 +246,7 @@ with tab1:
                 st.session_state.preview = None
                 st.session_state.edit_clicked = True
 
-            if "edited_menu_df" not in st.session_state:
+            # if "edited_menu_df" not in st.session_state:
                 menu_data = st.session_state.run_donut_result.get("menu", [])
                 if isinstance(menu_data, dict):
                     menu_data = [menu_data]
@@ -255,14 +255,14 @@ with tab1:
 
                 st.session_state.edited_menu_df = pd.DataFrame(menu_data)
 
-            if "edited_total_df" not in st.session_state:
+            # if "edited_total_df" not in st.session_state:
                 total_data = st.session_state.run_donut_result.get("total", {})
                 if not isinstance(total_data, dict):
                     total_data = {}
                 
                 st.session_state.edited_total_df = pd.DataFrame([total_data])
 
-            if "edited_subtotal_df" not in st.session_state:
+            # if "edited_subtotal_df" not in st.session_state:
                 subtotal_data = st.session_state.run_donut_result.get("subtotal", {})
                 if not isinstance(subtotal_data, dict):
                     subtotal_data = {}
