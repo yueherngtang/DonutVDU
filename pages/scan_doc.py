@@ -87,14 +87,18 @@ with tab1:
                 allow_saving = False
         
         if "subtotal" in output.keys():
-            if "subtotal_price" in output["subtotal"].keys():
-                try:
-                    output["subtotal"]["subtotal_price"] = float(output["subtotal"]["subtotal_price"].replace(",","").replace("RM","").strip())
-                except (ValueError, TypeError):
-                    st.toast("subtotal_price Format is Incorrect, Please make sure there are no spaces or currencies.")
-                    allow_saving = False
-            else:
-                output["subtotal"]["subtotal_price"] =  0
+            subtotal_keys = ["subtotal_price", "discount_price", "tax_price"]
+            for k in subtotal_keys:
+                if k in output["subtotal"].keys():
+                    try:
+                        output["subtotal"][k] = float(output["subtotal"][k].replace(",","").replace("RM","").strip())
+                    except (ValueError, TypeError):
+                        st.toast(f"{k} Format is Incorrect, Please make sure there are no spaces or currencies.")
+                        allow_saving = False
+                
+                elif k == "subtotal_price":
+                    output["subtotal"]["subtotal_price"] =  0
+
 
         if "total" in output.keys():
             if "total_price" in output["total"]:
@@ -276,6 +280,10 @@ with tab1:
             edited_output["merchant"] = st.text_input("Merchant", value=st.session_state.run_donut_result.get("merchant", ""))
             try:
                 parsed_date = datetime.datetime.strptime(raw_date, "%d-%m-%Y").date()
+            except Exception:
+                parsed_date = date.today()
+            try:
+                parsed_date = datetime.datetime.strptime(raw_date, "%d/%m/%Y").date()
             except Exception:
                 parsed_date = date.today()
             edited_output["date"] = st.date_input("Date", value=parsed_date)
