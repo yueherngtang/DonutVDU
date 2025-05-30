@@ -87,14 +87,18 @@ with tab1:
                 allow_saving = False
         
         if "subtotal" in output.keys():
-            if "subtotal_price" in output["subtotal"].keys():
-                try:
-                    output["subtotal"]["subtotal_price"] = float(output["subtotal"]["subtotal_price"].replace(",","").replace("RM","").strip())
-                except (ValueError, TypeError):
-                    st.toast("subtotal_price Format is Incorrect, Please make sure there are no spaces or currencies.")
-                    allow_saving = False
-            else:
-                output["subtotal"]["subtotal_price"] =  0
+            subtotal_keys = ["subtotal_price", "discount_price", "tax_price"]
+            for k in subtotal_keys:
+                if k in output["subtotal"].keys():
+                    try:
+                        output["subtotal"][k] = float(output["subtotal"][k].replace(",","").replace("RM","").strip())
+                    except (ValueError, TypeError):
+                        st.toast(f"{k} Format is Incorrect, Please make sure there are no spaces or currencies.")
+                        allow_saving = False
+                
+                elif k == "subtotal_price":
+                    output["subtotal"]["subtotal_price"] =  0
+
 
         if "total" in output.keys():
             if "total_price" in output["total"]:
@@ -246,7 +250,7 @@ with tab1:
                 st.session_state.preview = None
                 st.session_state.edit_clicked = True
 
-            if "edited_menu_df" not in st.session_state:
+            # if "edited_menu_df" not in st.session_state:
                 menu_data = st.session_state.run_donut_result.get("menu", [])
                 if isinstance(menu_data, dict):
                     menu_data = [menu_data]
@@ -255,14 +259,14 @@ with tab1:
 
                 st.session_state.edited_menu_df = pd.DataFrame(menu_data)
 
-            if "edited_total_df" not in st.session_state:
+            # if "edited_total_df" not in st.session_state:
                 total_data = st.session_state.run_donut_result.get("total", {})
                 if not isinstance(total_data, dict):
                     total_data = {}
                 
                 st.session_state.edited_total_df = pd.DataFrame([total_data])
 
-            if "edited_subtotal_df" not in st.session_state:
+            # if "edited_subtotal_df" not in st.session_state:
                 subtotal_data = st.session_state.run_donut_result.get("subtotal", {})
                 if not isinstance(subtotal_data, dict):
                     subtotal_data = {}
@@ -276,6 +280,10 @@ with tab1:
             edited_output["merchant"] = st.text_input("Merchant", value=st.session_state.run_donut_result.get("merchant", ""))
             try:
                 parsed_date = datetime.datetime.strptime(raw_date, "%d-%m-%Y").date()
+            except Exception:
+                parsed_date = date.today()
+            try:
+                parsed_date = datetime.datetime.strptime(raw_date, "%d/%m/%Y").date()
             except Exception:
                 parsed_date = date.today()
             edited_output["date"] = st.date_input("Date", value=parsed_date)
